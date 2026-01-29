@@ -7,7 +7,7 @@ export default async function handler(req, res) {
     const KEYS_DB = {
         "user1": { key: "AKASH_PAID8DAYS", expiry: "2026-01-25" },
         "user2": { key: "AKASH_PAID1DAYS", expiry: "2026-01-31" },
-        "trial": { key: "FREE_TRY", expiry: "2026-01-18" },
+        "trial": { key: "AKASH_PAID3MONTH", expiry: "2026-04-29" },
     };
 
     if (!userKey) {
