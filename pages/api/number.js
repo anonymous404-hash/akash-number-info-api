@@ -40,7 +40,7 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: "number missing" });
     }
 
-    const url = `https://ravan-lookup.vercel.app/api?key=Ravan&type=mobile&term=${number}`;
+    const url = `https://original.proportalxc.workers.dev/?num=${number}`;
 
     try {
         const response = await fetch(url);
