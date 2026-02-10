@@ -1,10 +1,10 @@
-Const axios = require("axios");
+const axios = require("axios");
 
 const DEVELOPER = "@AKASHHACKER"; // Aapka handle
 const KEYS_DB = {
-  "AKASH_PAID3MONTH": { expiry: "2026-04-29", status: "Premium" },
-  "AKASH_PAID31DAYS": { expiry: "2026-02-30", status: "Basic" },
-  "FREETRAIL": { expiry: "2026-02-12", status: "Premium" }
+  "AKASH_PAID31DAYS": { expiry: "2026-03-31", status: "Premium" },
+  "AKASH_PAID1DAYS": { expiry: "2026-02-15", status: "Basic" },
+  "ZEXX_VIP": { expiry: "2026-12-31", status: "Premium" }
 };
 
 module.exports = async (req, res) => {
