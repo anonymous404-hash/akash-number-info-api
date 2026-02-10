@@ -1,57 +1,70 @@
-export default async function handler(req, res) {
-    const number = req.query.num;
-    const userKey = req.query.key;
+const axios = require("axios");
 
-    const KEYS_DB = {
-        "user1": { key: "AKASH_PAID31DAYS", expiry: "2026-03-31" },
-        "user2": { key: "AKASH_PAID1DAYS", expiry: "2026-02-15" },
-        "trial": { key: "AKASH_PAID3MONTH", expiry: "2026-04-29" },
-    };
+const DEVELOPER = "@AKASHHACKER"; // Aapka handle
+const KEYS_DB = {
+  "AKASH_PAID31DAYS": { expiry: "2026-03-31", status: "Premium" },
+  "AKASH_PAID1DAYS": { expiry: "2026-02-15", status: "Basic" },
+  "ZEXX_VIP": { expiry: "2026-12-31", status: "Premium" }
+};
 
-    if (!userKey) return res.status(401).json({ error: "API Key missing!" });
+module.exports = async (req, res) => {
+  // Query parameters: ?num=...&key=...
+  const { num, key } = req.query; 
 
-    const foundUser = Object.values(KEYS_DB).find(u => u.key === userKey);
-    if (!foundUser) return res.status(401).json({ error: "Invalid API Key!" });
+  // 1️⃣ Key Validation
+  if (!key || !KEYS_DB[key]) {
+    return res.status(401).json({ success: false, message: "Invalid Key!", developer: DEVELOPER });
+  }
 
-    const today = new Date();
-    const expiryDate = new Date(foundUser.expiry);
-    if (today > expiryDate) {
-        return res.status(403).json({ error: "Key Expired!", expiry: foundUser.expiry });
-    }
+  // 2️⃣ Expiry Logic
+  const today = new Date();
+  const expiryDate = new Date(KEYS_DB[key].expiry);
+  const timeDiff = expiryDate - today;
+  const daysLeft = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
 
-    if (!number) return res.status(400).json({ error: "Number missing!" });
+  if (today > expiryDate) {
+    return res.status(403).json({
+      success: false,
+      message: "Key Expired!",
+      expiry_date: KEYS_DB[key].expiry,
+      developer: DEVELOPER
+    });
+  }
 
-    // --- TARGET URL ---
-    const url = `https://snxrajput-trial-api.vercel.app/number/${number}`;
+  if (!num) {
+    return res.status(400).json({ success: false, message: "Phone number (num) required" });
+  }
 
-    try {
-        const response = await fetch(url);
-        let rawData = await response.text(); // Text format mein data liya
+  try {
+    // 3️⃣ Fetch data as Text (Kyuki source API text design bhej rahi hai)
+    const apiRes = await axios.get(`https://snxrajput-trial-api.vercel.app/number/${num}`, {
+      responseType: 'text' 
+    });
 
-        // --- SURAJ KO AKASH SE REPLACE KARNA ---
-        // Ye line Rajput Suraj aur CyberSuraj ko badal degi
-        let modifiedData = rawData
-            .replace(/CyberSuraj/g, "AKASHHACKER")
-            .replace(/Rajput Suraj Raj/g, "AKASHHACKER")
-            .replace(/● Credit: .*/g, "● Credit: AKASHHACKER")
-            .replace(/● Developer: .*/g, "● Developer: AKASHHACKER");
+    let data = apiRes.data;
 
-        // Extra info add karna (Last mein)
-        const extraInfo = `
-========================================
-🔐 KEY DETAILS
-========================================
-● Status: Active
-● Expiry: ${foundUser.expiry}
-● Powered By: @AKASHHACKER
-========================================`;
+    // 4️⃣ Replace Names (Suraj hatao, Akash lagao)
+    let cleanData = data
+      .replace(/CyberSuraj/g, "AKASHHACKER")
+      .replace(/Rajput Suraj Raj/g, "AKASHHACKER")
+      .replace(/● Credit: .*/g, "● Credit: AKASHHACKER")
+      .replace(/● Developer: .*/g, "● Developer: AKASHHACKER");
 
-        // Text response bhejna (kyunki source text hai)
-        res.setHeader('Content-Type', 'text/plain; charset=utf-8');
-        return res.status(200).send(modifiedData + extraInfo);
+    // 5️⃣ Final JSON Response
+    return res.status(200).json({
+      success: true,
+      developer: DEVELOPER,
+      key_status: KEYS_DB[key].status,
+      expiry_date: KEYS_DB[key].expiry,
+      days_left: daysLeft > 0 ? `${daysLeft} days` : "Last day today",
+      result: cleanData // Yaha wo modified text design aayega
+    });
 
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: "API Response error ya link galat hai" });
-    }
-}
+  } catch (err) {
+    return res.status(500).json({ 
+      success: false, 
+      message: "Source API Offline hai ya response error", 
+      developer: DEVELOPER 
+    });
+  }
+};
