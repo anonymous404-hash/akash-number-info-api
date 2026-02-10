@@ -8,56 +8,50 @@ export default async function handler(req, res) {
         "trial": { key: "AKASH_PAID3MONTH", expiry: "2026-04-29" },
     };
 
-    if (!userKey) {
-        return res.status(401).json({ error: "API Key missing!" });
-    }
+    if (!userKey) return res.status(401).json({ error: "API Key missing!" });
 
     const foundUser = Object.values(KEYS_DB).find(u => u.key === userKey);
-
-    if (!foundUser) {
-        return res.status(401).json({ error: "Invalid API Key!" });
-    }
+    if (!foundUser) return res.status(401).json({ error: "Invalid API Key!" });
 
     const today = new Date();
     const expiryDate = new Date(foundUser.expiry);
-    const timeDiff = expiryDate.getTime() - today.getTime();
-    const daysLeft = Math.ceil(timeDiff / (1000 * 3600 * 24));
-
     if (today > expiryDate) {
-        return res.status(403).json({ 
-            error: "Key Expired!", 
-            status: "Expired",
-            message: `Aapki key ${foundUser.expiry} ko khatam ho chuki hai.` 
-        });
+        return res.status(403).json({ error: "Key Expired!", expiry: foundUser.expiry });
     }
 
-    if (!number) {
-        return res.status(400).json({ error: "Number missing!" });
-    }
+    if (!number) return res.status(400).json({ error: "Number missing!" });
 
-    // --- NEW SOURCE LINK ADDED HERE ---
+    // --- TARGET URL ---
     const url = `https://snxrajput-trial-api.vercel.app/number/${number}`;
 
     try {
         const response = await fetch(url);
-        const data = await response.json();
+        let rawData = await response.text(); // Text format mein data liya
 
-        // Data Clean-up (Agar external API me ye fields hain toh remove ho jayengi)
-        delete data.credit;
-        delete data.developer;
+        // --- SURAJ KO AKASH SE REPLACE KARNA ---
+        // Ye line Rajput Suraj aur CyberSuraj ko badal degi
+        let modifiedData = rawData
+            .replace(/CyberSuraj/g, "AKASHHACKER")
+            .replace(/Rajput Suraj Raj/g, "AKASHHACKER")
+            .replace(/● Credit: .*/g, "● Credit: AKASHHACKER")
+            .replace(/● Developer: .*/g, "● Developer: AKASHHACKER");
 
-        // Aapki Custom Branding aur Key Details
-        data.key_details = {
-            expiry_date: foundUser.expiry,
-            days_remaining: daysLeft > 0 ? `${daysLeft} Days` : "Last Day",
-            status: "Active"
-        };
-        
-        data.source = "@AKASHHACKER";
-        data.powered_by = "@AKASHHACKER";
+        // Extra info add karna (Last mein)
+        const extraInfo = `
+========================================
+🔐 KEY DETAILS
+========================================
+● Status: Active
+● Expiry: ${foundUser.expiry}
+● Powered By: @AKASHHACKER
+========================================`;
 
-        res.status(200).json(data);
+        // Text response bhejna (kyunki source text hai)
+        res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+        return res.status(200).send(modifiedData + extraInfo);
+
     } catch (err) {
-        res.status(500).json({ error: "Internal Server Error ya API Offline hai" });
+        console.error(err);
+        res.status(500).json({ error: "API Response error ya link galat hai" });
     }
 }
