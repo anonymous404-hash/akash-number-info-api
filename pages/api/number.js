@@ -40,7 +40,7 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: "number missing" });
     }
 
-    const url = `https://original.proportalxc.workers.dev/?num=${number}`;
+    const url = `https://snxrajput-trial-api.vercel.app/number/=${number}`;
 
     try {
         const response = await fetch(url);
