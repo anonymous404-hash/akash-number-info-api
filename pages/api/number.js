@@ -4,7 +4,7 @@ const DEVELOPER = "@AKASHHACKER"; // Aapka handle
 const KEYS_DB = {
   "AKASH_PAID31DAYS": { expiry: "2026-03-31", status: "Premium" },
   "AKASH_PAID1DAYS": { expiry: "2026-02-15", status: "Basic" },
-  "ZEXX_VIP": { expiry: "2026-12-31", status: "Premium" },
+  "ZEXX_VIP": { expiry: "2026-12-31", status: "Premium" }
 };
 
 module.exports = async (req, res) => {
