@@ -3,7 +3,7 @@ Const axios = require("axios");
 const DEVELOPER = "@AKASHHACKER"; // Aapka handle
 const KEYS_DB = {
   "AKASH_PAID31DAYS": { expiry: "2026-03-31", status: "Premium" },
-  "AKASH_PAID1DAYS": { expiry: "2026-02-15", status: "Basic" },
+  "AKASH_PAID5DAYS": { expiry: "2026-02-15", status: "Basic" },
   "FREE": { expiry: "2026-02-12", status: "Premium" }
 };
 
