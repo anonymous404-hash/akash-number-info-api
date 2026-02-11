@@ -5,8 +5,8 @@ export default async function handler(req, res) {
     const userKey = req.query.key;
 
     const KEYS_DB = {
-        "user1": { key: "AKASH_PAID31DAYS", expiry: "2026-03-31" }, // Fixed February 31 date to March
-        "user2": { key: "AKASH_PAID1DAYS", expiry: "2026-02-15" },
+        "user1": { key: "AKASH_PAID31DAYS", expiry: "2026-02-31" }, // Fixed February 31 date to March
+        "user2": { key: "AKASH_PAID1DAYS", expiry: "2026-02-12" },
         "trial": { key: "AKASH_PAID3MONTH", expiry: "2026-04-29" },
     };
 
