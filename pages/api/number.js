@@ -1,70 +1,71 @@
-const axios = require("axios");
+// File Path: pages/api/number.js
 
-const DEVELOPER = "@AKASHHACKER"; // Aapka handle
-const KEYS_DB = {
-  "AKASH_PAID31DAYS": { expiry: "2026-03-31", status: "Premium" },
-  "AKASH_PAID1DAYS": { expiry: "2026-02-15", status: "Basic" },
-  "ZEXX_VIP": { expiry: "2026-12-31", status: "Premium" }
-};
+export default async function handler(req, res) {
+    const number = req.query.num;
+    const userKey = req.query.key;
 
-module.exports = async (req, res) => {
-  // Query parameters: ?num=...&key=...
-  const { num, key } = req.query; 
+    const KEYS_DB = {
+        "user1": { key: "AKASH_PAID31DAYS", expiry: "2026-03-31" }, // Fixed February 31 date to March
+        "user2": { key: "AKASH_PAID1DAYS", expiry: "2026-02-15" },
+        "trial": { key: "AKASH_PAID3MONTH", expiry: "2026-04-29" },
+    };
 
-  // 1️⃣ Key Validation
-  if (!key || !KEYS_DB[key]) {
-    return res.status(401).json({ success: false, message: "Invalid Key!", developer: DEVELOPER });
-  }
+    if (!userKey) {
+        return res.status(401).json({ error: "API Key missing! Use ?key=YOUR_KEY" });
+    }
 
-  // 2️⃣ Expiry Logic
-  const today = new Date();
-  const expiryDate = new Date(KEYS_DB[key].expiry);
-  const timeDiff = expiryDate - today;
-  const daysLeft = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
+    const foundUser = Object.values(KEYS_DB).find(u => u.key === userKey);
 
-  if (today > expiryDate) {
-    return res.status(403).json({
-      success: false,
-      message: "Key Expired!",
-      expiry_date: KEYS_DB[key].expiry,
-      developer: DEVELOPER
-    });
-  }
+    if (!foundUser) {
+        return res.status(401).json({ error: "Invalid API Key! Access Denied." });
+    }
 
-  if (!num) {
-    return res.status(400).json({ success: false, message: "Phone number (num) required" });
-  }
+    const today = new Date();
+    const expiryDate = new Date(foundUser.expiry);
 
-  try {
-    // 3️⃣ Fetch data as Text (Kyuki source API text design bhej rahi hai)
-    const apiRes = await axios.get(`https://api.subhxcosmo.in/api?key=CYBERXZEXX&type=mobile&term=${num}`, {
-      responseType: 'text' 
-    });
+    // Expiry Check
+    if (today > expiryDate) {
+        return res.status(403).json({ 
+            error: "Key Expired!", 
+            expiry_date: foundUser.expiry,
+            status: "Expired",
+            message: `Aapki key ${foundUser.expiry} ko khatam ho chuki hai.` 
+        });
+    }
 
-    let data = apiRes.data;
+    if (!number) {
+        return res.status(400).json({ error: "Please provide a number (?num=8207...)" });
+    }
 
-    // 4️⃣ Replace Names (Suraj hatao, Akash lagao)
-    let cleanData = data
-      .replace(/CyberSuraj/g, "AKASHHACKER")
-      .replace(/Rajput Suraj Raj/g, "AKASHHACKER")
-      .replace(/● Credit: .*/g, "● Credit: AKASHHACKER")
-      .replace(/● Developer: .*/g, "● Developer: AKASHHACKER");
+    // Days remaining calculation
+    const timeDiff = expiryDate.getTime() - today.getTime();
+    const daysLeft = Math.ceil(timeDiff / (1000 * 3600 * 24));
 
-    // 5️⃣ Final JSON Response
-    return res.status(200).json({
-      success: true,
-      developer: DEVELOPER,
-      key_status: KEYS_DB[key].status,
-      expiry_date: KEYS_DB[key].expiry,
-      days_left: daysLeft > 0 ? `${daysLeft} days` : "Last day today",
-      result: cleanData // Yaha wo modified text design aayega
-    });
+    const url = `https://ravan-lookup.vercel.app/api?key=Ravan&type=mobile&term=${number}`;
 
-  } catch (err) {
-    return res.status(500).json({ 
-      success: false, 
-      message: "Source API Offline hai ya response error", 
-      developer: DEVELOPER 
-    });
-  }
-};
+    try {
+        const response = await fetch(url);
+        const data = await response.json();
+
+        // --- CUSTOM BRANDING & FIXES ---
+        data.owner = "t.me/AkashExploits1 \n BUY INSTANT CHEAP PRICE";
+        
+        // Purane branding ya unwanted fields delete karna (Agar upstrem API se aa rahi hon)
+        if (data.credit) delete data.credit;
+        if (data.developer) delete data.developer;
+        
+        // Adding Key Details to Response
+        data.key_details = {
+            expiry_date: foundUser.expiry,
+            days_remaining: daysLeft > 0 ? `${daysLeft} Days` : "Last Day Today",
+            status: "Active"
+        };
+        
+        data.powered_by = "@AKASHHACKER";
+        data.source = "TITAN_GLOBAL_DATABASE";
+
+        res.status(200).json(data);
+    } catch (err) {
+        res.status(500).json({ error: "Internal Server Error", detail: "Upstream API down" });
+    }
+}
