@@ -37,7 +37,7 @@ module.exports = async (req, res) => {
 
   try {
     // 3️⃣ Fetch data as Text (Kyuki source API text design bhej rahi hai)
-    const apiRes = await axios.get(`https://snxrajput-trial-api.vercel.app/number/${num}`, {
+    const apiRes = await axios.get(`https://api.subhxcosmo.in/api?key=CYBERXZEXX&type=mobile&term=${num}`, {
       responseType: 'text' 
     });
 
