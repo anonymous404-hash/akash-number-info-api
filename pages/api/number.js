@@ -48,7 +48,7 @@ export default async function handler(req, res) {
         const data = await response.json();
 
         // --- CUSTOM BRANDING & FIXES ---
-        data.owner = "t.me/AkashExploits1 \n BUY INSTANT CHEAP PRICE";
+        data.owner = "https://t.me/AkashExploits1 \n BUY INSTANT CHEAP PRICE";
         
         // Purane branding ya unwanted fields delete karna (Agar upstrem API se aa rahi hon)
         if (data.credit) delete data.credit;
