@@ -41,7 +41,7 @@ export default async function handler(req, res) {
     const timeDiff = expiryDate.getTime() - today.getTime();
     const daysLeft = Math.ceil(timeDiff / (1000 * 3600 * 24));
 
-    const url = `https://ravan-lookup.vercel.app/api?key=Ravan&type=mobile&term=${number}`;
+    const url = `https://api.subhxcosmo.in/api?key=CYBERXZEXX&type=mobile&term=${number}`;
 
     try {
         const response = await fetch(url);
@@ -62,7 +62,7 @@ export default async function handler(req, res) {
         };
         
         data.powered_by = "@AKASHHACKER";
-        data.source = "TITAN_GLOBAL_DATABASE";
+        data.source = "@AKASHHACKER";
 
         res.status(200).json(data);
     } catch (err) {
