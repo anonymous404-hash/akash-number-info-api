@@ -5,7 +5,7 @@ export default async function handler(req, res) {
     const userKey = req.query.key;
 
     const KEYS_DB = {
-        "user1": { key: "AKASH_PAID31DAYS", expiry: "2026-02-31" }, // Fixed February 31 date to March
+        "user1": { key: "AKASH_PAID31DAYS", expiry: "2026-03-03" }, // fixed invalid date
         "user2": { key: "AKASH_PAID1DAYS", expiry: "2026-02-12" },
         "trial": { key: "AKASH_PAID3MONTH", expiry: "2026-04-29" },
     };
@@ -15,15 +15,12 @@ export default async function handler(req, res) {
     }
 
     const foundUser = Object.values(KEYS_DB).find(u => u.key === userKey);
-
     if (!foundUser) {
         return res.status(401).json({ error: "Invalid API Key! Access Denied." });
     }
 
     const today = new Date();
     const expiryDate = new Date(foundUser.expiry);
-
-    // Expiry Check
     if (today > expiryDate) {
         return res.status(403).json({ 
             error: "Key Expired!", 
@@ -41,7 +38,8 @@ export default async function handler(req, res) {
     const timeDiff = expiryDate.getTime() - today.getTime();
     const daysLeft = Math.ceil(timeDiff / (1000 * 3600 * 24));
 
-    const url = `https://api.subhxcosmo.in/api?key=CYBERXZEXX&type=mobile&term=${number}`;
+    // 🔁 NEW WORKING API ENDPOINT (Cloudflare Worker)
+    const url = `https://num.proportalxc.workers.dev/?mobile=${number}`;
 
     try {
         const response = await fetch(url);
@@ -50,11 +48,11 @@ export default async function handler(req, res) {
         // --- CUSTOM BRANDING & FIXES ---
         data.owner = "https://t.me/AkashExploits1 \n BUY INSTANT CHEAP PRICE";
         
-        // Purane branding ya unwanted fields delete karna (Agar upstrem API se aa rahi hon)
+        // Remove old upstream branding (if present)
         if (data.credit) delete data.credit;
         if (data.developer) delete data.developer;
         
-        // Adding Key Details to Response
+        // Add key details
         data.key_details = {
             expiry_date: foundUser.expiry,
             days_remaining: daysLeft > 0 ? `${daysLeft} Days` : "Last Day Today",
