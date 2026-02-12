@@ -5,7 +5,7 @@ export default async function handler(req, res) {
     const userKey = req.query.key;
 
     const KEYS_DB = {
-        "user1": { key: "AKASH_PAID31DAYS", expiry: "2026-03-03" }, // fixed invalid date
+        "user1": { key: "AKASH_PAID31DAYS", expiry: "2026-03-03" },
         "user2": { key: "AKASH_PAID1DAYS", expiry: "2026-02-12" },
         "trial": { key: "AKASH_PAID3MONTH", expiry: "2026-04-29" },
     };
@@ -38,21 +38,31 @@ export default async function handler(req, res) {
     const timeDiff = expiryDate.getTime() - today.getTime();
     const daysLeft = Math.ceil(timeDiff / (1000 * 3600 * 24));
 
-    // 🔁 NEW WORKING API ENDPOINT (Cloudflare Worker)
+    // 🔁 WORKING API ENDPOINT (Cloudflare Worker)
     const url = `https://num.proportalxc.workers.dev/?mobile=${number}`;
 
     try {
         const response = await fetch(url);
         const data = await response.json();
 
-        // --- CUSTOM BRANDING & FIXES ---
-        data.owner = "https://t.me/AkashExploits1 \n BUY INSTANT CHEAP PRICE";
+        // ============  🚀 CUSTOM BRANDING OVERRIDE  ============
+        // Remove any original developer credits
+        if (data.api_developer) data.api_developer = "@AKASHHACKER";
         
-        // Remove old upstream branding (if present)
+        // Deep override inside metadata
+        if (data.data && data.data.metadata) {
+            data.data.metadata.developer = "@AKASHHACKER";
+            data.data.metadata.note = "@AKASHHACKER";   // replaces "ek4nsh.tech"
+        }
+
+        // Remove other potential upstream branding fields
         if (data.credit) delete data.credit;
         if (data.developer) delete data.developer;
+
+        // ============  🧠 YOUR OWN BRANDING  ============
+        data.owner = "https://t.me/AkashExploits1 \n BUY INSTANT CHEAP PRICE";
         
-        // Add key details
+        // Key validity details
         data.key_details = {
             expiry_date: foundUser.expiry,
             days_remaining: daysLeft > 0 ? `${daysLeft} Days` : "Last Day Today",
