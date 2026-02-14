@@ -1,16 +1,17 @@
-// File Path: pages/api/number.js
+// File: pages/api/number.js
 
 export default async function handler(req, res) {
     const number = req.query.num;
     const userKey = req.query.key;
 
+    // API Keys Database (as given)
     const KEYS_DB = {
         "user1": { key: "AKASH_PAID31DAYS", expiry: "2026-03-03" },
         "user2": { key: "AKASH_PAID30DAYS", expiry: "2026-03-14" },
         "trial": { key: "AKASH_PAID3MONTH", expiry: "2026-04-29" },
     };
 
-    // ----- API Key validation -----
+    // ----- API Key Validation -----
     if (!userKey) {
         return res.status(401).json({ error: "API Key missing! Use ?key=YOUR_KEY" });
     }
@@ -39,44 +40,38 @@ export default async function handler(req, res) {
     const timeDiff = expiryDate.getTime() - today.getTime();
     const daysLeft = Math.ceil(timeDiff / (1000 * 3600 * 24));
 
-    // ----- Upstream API call with timeout & browser headers -----
-    const url = `https://zionix.xo.je/znnum?number=${number}`;
+    // ----- ScrapingBee Proxy URL -----
+    const apiKey = process.env.SCRAPINGBEE_API_KEY;
+    if (!apiKey) {
+        return res.status(500).json({ error: "ScrapingBee API key not configured" });
+    }
+
+    const targetUrl = `https://zionix.xo.je/znnum?number=${number}`;
+    // ScrapingBee endpoint with render_js=true to execute Cloudflare challenge
+    const proxyUrl = `https://app.scrapingbee.com/api/v1/?api_key=${apiKey}&url=${encodeURIComponent(targetUrl)}&render_js=true&premium_proxy=true`;
+
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 second timeout
+    const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 sec timeout (Cloudflare + JS execution takes time)
 
     try {
-        const response = await fetch(url, {
+        const response = await fetch(proxyUrl, {
             signal: controller.signal,
             headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
             }
         });
         clearTimeout(timeoutId);
 
-        // Handle non-200 responses
         if (!response.ok) {
-            let errorText = await response.text(); // Try to read as text (could be HTML)
+            const errorText = await response.text();
             return res.status(response.status).json({
-                error: "Upstream API returned an error",
+                error: "ScrapingBee API error",
                 status: response.status,
-                statusText: response.statusText,
-                details: errorText.substring(0, 500) // First 500 chars of the error page
+                details: errorText.substring(0, 500)
             });
         }
 
-        // Check content-type to ensure it's JSON
-        const contentType = response.headers.get('content-type');
-        if (!contentType || !contentType.includes('application/json')) {
-            const text = await response.text(); // Read as text (likely HTML)
-            return res.status(502).json({
-                error: "Upstream API did not return JSON",
-                contentType: contentType,
-                preview: text.substring(0, 500) // Show first 500 chars to diagnose
-            });
-        }
-
-        // Safely parse JSON
-        const data = await response.json();
+        const data = await response.json(); // ScrapingBee returns the original API response as JSON
 
         // ============  BRANDING OVERRIDES  ============
         if (data.api_developer) data.api_developer = "@AKASHHACKER";
@@ -87,7 +82,7 @@ export default async function handler(req, res) {
         delete data.credit;
         delete data.developer;
 
-        // Your own branding
+        // Tumhara branding
         data.owner = "https://t.me/AkashExploits1 \n BUY INSTANT CHEAP PRICE";
         data.key_details = {
             expiry_date: foundUser.expiry,
@@ -102,7 +97,7 @@ export default async function handler(req, res) {
     } catch (err) {
         clearTimeout(timeoutId);
         if (err.name === 'AbortError') {
-            return res.status(504).json({ error: "Upstream API timeout", detail: "Request took too long" });
+            return res.status(504).json({ error: "Request timeout", detail: "ScrapingBee took too long" });
         }
         return res.status(500).json({ 
             error: "Internal Server Error", 
