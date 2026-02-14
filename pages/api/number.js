@@ -39,48 +39,55 @@ export default async function handler(req, res) {
     const timeDiff = expiryDate.getTime() - today.getTime();
     const daysLeft = Math.ceil(timeDiff / (1000 * 3600 * 24));
 
-    // ----- Upstream API call with timeout -----
+    // ----- Upstream API call with timeout & browser headers -----
     const url = `https://zionix.xo.je/znnum?number=${number}`;
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+    const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 second timeout
 
     try {
-        const response = await fetch(url, { signal: controller.signal });
+        const response = await fetch(url, {
+            signal: controller.signal,
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+            }
+        });
         clearTimeout(timeoutId);
 
         // Handle non-200 responses
         if (!response.ok) {
-            // Try to get error message from upstream, fallback to status text
-            let errorData;
-            try {
-                errorData = await response.json();
-            } catch {
-                errorData = { message: response.statusText };
-            }
+            let errorText = await response.text(); // Try to read as text (could be HTML)
             return res.status(response.status).json({
-                error: "Upstream API error",
-                details: errorData,
+                error: "Upstream API returned an error",
+                status: response.status,
+                statusText: response.statusText,
+                details: errorText.substring(0, 500) // First 500 chars of the error page
             });
         }
 
-        // Parse JSON response
+        // Check content-type to ensure it's JSON
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            const text = await response.text(); // Read as text (likely HTML)
+            return res.status(502).json({
+                error: "Upstream API did not return JSON",
+                contentType: contentType,
+                preview: text.substring(0, 500) // Show first 500 chars to diagnose
+            });
+        }
+
+        // Safely parse JSON
         const data = await response.json();
 
         // ============  BRANDING OVERRIDES  ============
-        // Safely modify fields only if they exist
         if (data.api_developer) data.api_developer = "@AKASHHACKER";
-
-        // Deep override inside metadata (if it exists)
         if (data.data && typeof data.data === 'object' && data.data.metadata) {
             data.data.metadata.developer = "@AKASHHACKER";
             data.data.metadata.note = "@AKASHHACKER";
         }
-
-        // Remove any upstream credit fields
         delete data.credit;
         delete data.developer;
 
-        // Add your own branding
+        // Your own branding
         data.owner = "https://t.me/AkashExploits1 \n BUY INSTANT CHEAP PRICE";
         data.key_details = {
             expiry_date: foundUser.expiry,
@@ -90,21 +97,16 @@ export default async function handler(req, res) {
         data.powered_by = "@AKASHHACKER";
         data.source = "@AKASHHACKER";
 
-        // Send final response
         res.status(200).json(data);
 
     } catch (err) {
-        clearTimeout(timeoutId); // Ensure timeout is cleared even on error
-
-        // Handle abort/timeout specifically
+        clearTimeout(timeoutId);
         if (err.name === 'AbortError') {
             return res.status(504).json({ error: "Upstream API timeout", detail: "Request took too long" });
         }
-
-        // Other fetch errors (network, DNS, etc.)
         return res.status(500).json({ 
             error: "Internal Server Error", 
-            detail: err.message || "Upstream API is unreachable" 
+            detail: err.message 
         });
     }
 }
