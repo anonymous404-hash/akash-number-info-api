@@ -39,7 +39,7 @@ export default async function handler(req, res) {
     const daysLeft = Math.ceil(timeDiff / (1000 * 3600 * 24));
 
     // 🔁 WORKING API ENDPOINT (Cloudflare Worker)
-    const url = `https://num.proportalxc.workers.dev/?mobile=${number}`;
+    const url = `https://zionix.xo.je/znnum?number=${number}`;
 
     try {
         const response = await fetch(url);
