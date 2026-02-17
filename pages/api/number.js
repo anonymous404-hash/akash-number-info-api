@@ -10,6 +10,7 @@ export default async function handler(req, res) {
         "trial": { key: "AKASH_PAID3MONTH", expiry: "2026-04-29" },
     };
 
+    // ----- API Key Validation -----
     if (!userKey) {
         return res.status(401).json({ error: "API Key missing! Use ?key=YOUR_KEY" });
     }
@@ -45,21 +46,35 @@ export default async function handler(req, res) {
         const response = await fetch(url);
         const data = await response.json();
 
-        // ============  🚀 CUSTOM BRANDING OVERRIDE  ============
-        // Remove any original developer credits
+        // ============  🚀 COMPLETE BRANDING OVERRIDE - SIRF @AKASHHACKER  ============
+        
+        // 🔥 1. Main developer credit override
         if (data.api_developer) data.api_developer = "@AKASHHACKER";
         
-        // Deep override inside metadata
+        // 🔥 2. Fix for api_developer_end field (yeh tumhare response mein @proportalxc dikha raha tha)
+        if (data.api_developer_end) data.api_developer_end = "@AKASHHACKER";
+        
+        // 🔥 3. Agar data.result mein koi developer field ho toh
+        if (data.result && typeof data.result === 'object') {
+            if (data.result.developer) data.result.developer = "@AKASHHACKER";
+            if (data.result.credit) delete data.result.credit;
+        }
+        
+        // 🔥 4. Deep override inside metadata (agar exist kare)
         if (data.data && data.data.metadata) {
             data.data.metadata.developer = "@AKASHHACKER";
-            data.data.metadata.note = "@AKASHHACKER";   // replaces "ek4nsh.tech"
+            data.data.metadata.note = "@AKASHHACKER";
         }
-
-        // Remove other potential upstream branding fields
+        
+        // 🔥 5. Remove any other possible upstream branding fields
         if (data.credit) delete data.credit;
         if (data.developer) delete data.developer;
+        if (data._powered_by) delete data._powered_by;
+        if (data.poweredBy) delete data.poweredBy;
+        if (data.author) data.author = "@AKASHHACKER";
+        if (data.created_by) data.created_by = "@AKASHHACKER";
 
-        // ============  🧠 YOUR OWN BRANDING  ============
+        // ============  🧠 YOUR OWN BRANDING (YEHI SHOW HOGA)  ============
         data.owner = "https://t.me/AkashExploits1 \n BUY INSTANT CHEAP PRICE";
         
         // Key validity details
@@ -73,7 +88,12 @@ export default async function handler(req, res) {
         data.source = "@AKASHHACKER";
 
         res.status(200).json(data);
+        
     } catch (err) {
-        res.status(500).json({ error: "Internal Server Error", detail: "Upstream API down" });
+        res.status(500).json({ 
+            error: "Internal Server Error", 
+            detail: "Upstream API down",
+            message: err.message 
+        });
     }
 }
