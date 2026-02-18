@@ -49,21 +49,21 @@ export default async function handler(req, res) {
         // ============  🚀 COMPLETE BRANDING OVERRIDE - SIRF @AKASHHACKER  ============
         
         // 🔥 1. Main developer credit override
-        if (data.api_developer) data.api_developer = "@AKASHHACKER";
+        if (data.api_developer) data.api_developer = "@Akashishare";
         
         // 🔥 2. Fix for api_developer_end field (yeh tumhare response mein @proportalxc dikha raha tha)
-        if (data.api_developer_end) data.api_developer_end = "@AKASHHACKER";
+        if (data.api_developer_end) data.api_developer_end = "@Akashishare";
         
         // 🔥 3. Agar data.result mein koi developer field ho toh
         if (data.result && typeof data.result === 'object') {
-            if (data.result.developer) data.result.developer = "@AKASHHACKER";
+            if (data.result.developer) data.result.developer = "@Akashishare";
             if (data.result.credit) delete data.result.credit;
         }
         
         // 🔥 4. Deep override inside metadata (agar exist kare)
         if (data.data && data.data.metadata) {
-            data.data.metadata.developer = "@AKASHHACKER";
-            data.data.metadata.note = "@AKASHHACKER";
+            data.data.metadata.developer = "@Akashishare";
+            data.data.metadata.note = "@Akashishare";
         }
         
         // 🔥 5. Remove any other possible upstream branding fields
@@ -71,11 +71,11 @@ export default async function handler(req, res) {
         if (data.developer) delete data.developer;
         if (data._powered_by) delete data._powered_by;
         if (data.poweredBy) delete data.poweredBy;
-        if (data.author) data.author = "@AKASHHACKER";
-        if (data.created_by) data.created_by = "@AKASHHACKER";
+        if (data.author) data.author = "@Akashishare";
+        if (data.created_by) data.created_by = "@Akashishare";
 
         // ============  🧠 YOUR OWN BRANDING (YEHI SHOW HOGA)  ============
-        data.owner = "https://t.me/AkashExploits1 \n BUY INSTANT CHEAP PRICE";
+        data.owner = "https://t.me/Akashishare \n BUY INSTANT CHEAP PRICE";
         
         // Key validity details
         data.key_details = {
@@ -84,8 +84,8 @@ export default async function handler(req, res) {
             status: "Active"
         };
         
-        data.powered_by = "@AKASHHACKER";
-        data.source = "@AKASHHACKER";
+        data.powered_by = "@Akashishare";
+        data.source = "@Akashishare";
 
         res.status(200).json(data);
         
